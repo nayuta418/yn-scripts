@@ -3,7 +3,7 @@
 # Converting NRRD files to DICOM files using pydicom and SimpleITK
 # 03 Aug 2024 Y. Nakahashi
 
-#$ python nrrd2dcm.py path/to/input.nrrd path/to/reference/dicom/dir path/to/output/dir
+#$ python nrrd2dcm.py path/to/input.nrrd path/to/reference/dicom/dir path/to/output/dir --series_number 5000
 
 import os
 import re
@@ -26,7 +26,7 @@ def list_sequential_files(directory, suffix=".dcm"):
     # フルパスを返す
     return [os.path.join(directory, f) for f in sequential_files]
 
-def convert_nrrd_to_single_frame_dicoms(input_nrrd_file, reference_dir, output_dir):
+def convert_nrrd_to_single_frame_dicoms(input_nrrd_file, reference_dir, output_dir, series_number):
     # メタデータの参考にするDICOMファイルのリストを作成
     files_list = list_sequential_files(reference_dir)
 
@@ -56,6 +56,7 @@ def convert_nrrd_to_single_frame_dicoms(input_nrrd_file, reference_dir, output_d
         # メタデータの更新
         new_dataset.SOPInstanceUID = pydicom.uid.generate_uid()
         new_dataset.InstanceNumber = i + 1
+        new_dataset.SeriesNumber = series_number  # Series Numberを更新
 
         # 画像の属性を設定
         new_dataset.Rows, new_dataset.Columns = slice_2d.shape
@@ -84,8 +85,9 @@ if __name__ == "__main__":
     parser.add_argument("input_nrrd_file", help="Path to the input NRRD file.")
     parser.add_argument("reference_dir", help="Directory containing reference DICOM files.")
     parser.add_argument("output_dir", help="Directory to save the output single-frame DICOM files.")
+    parser.add_argument("--series_number", type=int, default=4000, help="Series Number for the DICOM files. Default is 4000.")
 
     args = parser.parse_args()
 
     # NRRDからシングルフレームDICOMへの変換を実行
-    convert_nrrd_to_single_frame_dicoms(args.input_nrrd_file, args.reference_dir, args.output_dir)
+    convert_nrrd_to_single_frame_dicoms(args.input_nrrd_file, args.reference_dir, args.output_dir, args.series_number)
