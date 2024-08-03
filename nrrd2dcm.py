@@ -3,7 +3,7 @@
 # Converting NRRD files to DICOM files using pydicom and SimpleITK
 # 03 Aug 2024 Y. Nakahashi
 
-#$ python nrrd2dcm.py path/to/input.nrrd path/to/reference/dicom/dir path/to/output/dir --series_number 5000
+#$ python nrrd2dcm.py path/to/input.nrrd path/to/reference/dicom/dir path/to/output/dir --series_number 5000 --series_description "My Series Description"
 
 import os
 import re
@@ -11,6 +11,7 @@ import argparse
 import SimpleITK as sitk
 import pydicom
 import numpy as np
+import datetime
 
 # メタデータの参考にするDICOMファイルのリストを作成する
 def list_sequential_files(directory, suffix=".dcm"):
@@ -26,7 +27,7 @@ def list_sequential_files(directory, suffix=".dcm"):
     # フルパスを返す
     return [os.path.join(directory, f) for f in sequential_files]
 
-def convert_nrrd_to_single_frame_dicoms(input_nrrd_file, reference_dir, output_dir, series_number):
+def convert_nrrd_to_single_frame_dicoms(input_nrrd_file, reference_dir, output_dir, series_number, series_description):
     # メタデータの参考にするDICOMファイルのリストを作成
     files_list = list_sequential_files(reference_dir)
 
@@ -50,13 +51,23 @@ def convert_nrrd_to_single_frame_dicoms(input_nrrd_file, reference_dir, output_d
 
         reference_dataset = pydicom.dcmread(reference_file)
 
+        # 初回のスライスでSeries Numberが指定されていない場合にデフォルト値を設定
+        if series_number is None and i == 0:
+            series_number = reference_dataset.SeriesNumber + 1
+
         # 新しいDICOMデータセットを参照用データセットからコピー
         new_dataset = reference_dataset.copy()
+
+        # Series Instance UIDを変更
+        timestamp = datetime.datetime.now().strftime("%Y%m%d%H%M%S")
+        new_series_instance_uid = f"{reference_dataset.SeriesInstanceUID}.{timestamp}"
+        new_dataset.SeriesInstanceUID = new_series_instance_uid
 
         # メタデータの更新
         new_dataset.SOPInstanceUID = pydicom.uid.generate_uid()
         new_dataset.InstanceNumber = i + 1
         new_dataset.SeriesNumber = series_number  # Series Numberを更新
+        new_dataset.SeriesDescription = series_description  # Series Descriptionを更新
 
         # 画像の属性を設定
         new_dataset.Rows, new_dataset.Columns = slice_2d.shape
@@ -85,9 +96,14 @@ if __name__ == "__main__":
     parser.add_argument("input_nrrd_file", help="Path to the input NRRD file.")
     parser.add_argument("reference_dir", help="Directory containing reference DICOM files.")
     parser.add_argument("output_dir", help="Directory to save the output single-frame DICOM files.")
-    parser.add_argument("--series_number", type=int, default=4000, help="Series Number for the DICOM files. Default is 4000.")
+    parser.add_argument("--series_number", type=int, default=None, help="Series Number for the DICOM files. Default is reference DICOM Series Number + 1.")
+    parser.add_argument("--series_description", default=None, help="Series Description for the DICOM files. Default is the input NRRD filename.")
 
     args = parser.parse_args()
 
+    # Series DescriptionをデフォルトでNRRDファイル名に設定
+    if args.series_description is None:
+        args.series_description = os.path.basename(args.input_nrrd_file)
+
     # NRRDからシングルフレームDICOMへの変換を実行
-    convert_nrrd_to_single_frame_dicoms(args.input_nrrd_file, args.reference_dir, args.output_dir, args.series_number)
+    convert_nrrd_to_single_frame_dicoms(args.input_nrrd_file, args.reference_dir, args.output_dir, args.series_number, args.series_description)
