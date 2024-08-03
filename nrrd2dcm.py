@@ -1,8 +1,7 @@
-#!/usr/bin/env python3
-
-import pydicom
 import SimpleITK as sitk
+import pydicom
 import os
+import numpy as np
 import argparse
 
 def nrrd_to_dicom(input_file, output_directory):
