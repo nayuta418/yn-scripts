@@ -38,7 +38,7 @@ def convert_nrrd_to_single_frame_dicoms(input_nrrd_file, reference_dir, output_d
     os.makedirs(output_dir, exist_ok=True)
 
     # 画像データをnumpy配列に変換
-    image_array = sitk.GetArrayFromImage(nrrd_image)
+    image_array = sitk.GetArrayFromImage(nrrd_image) 
 
     # 各スライスをDICOMファイルとして保存
     for i, slice_2d in enumerate(image_array):
@@ -59,9 +59,9 @@ def convert_nrrd_to_single_frame_dicoms(input_nrrd_file, reference_dir, output_d
         new_dataset = reference_dataset.copy()
 
         # Series Instance UIDを変更
-        timestamp = datetime.datetime.now().strftime("%Y%m%d%H%M%S")
-        new_series_instance_uid = f"{reference_dataset.SeriesInstanceUID}.{timestamp}"
-        new_dataset.SeriesInstanceUID = new_series_instance_uid
+        # timestamp = datetime.datetime.now().strftime("%Y%m%d%H%M%S")
+        # new_series_instance_uid = f"{reference_dataset.SeriesInstanceUID}.{timestamp}"
+        # new_dataset.SeriesInstanceUID = new_series_instance_uid
 
         # メタデータの更新
         new_dataset.SOPInstanceUID = pydicom.uid.generate_uid()
