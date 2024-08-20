@@ -1,3 +1,8 @@
+#!/usr/bin/env python3
+
+# change_patient_IDname.py {directory}
+#→directory以下のdicom file全てについて、patient ID及び patient nameをカレントディレクトリの親ディレクトリの名前に変更する
+
 import os
 import pydicom
 import argparse
