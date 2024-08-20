@@ -13,7 +13,7 @@ def update_patient_name_and_id_in_dicom(directory):
                     dicom_data = pydicom.dcmread(dicom_file_path)
                     
                     # 親ディレクトリの親ディレクトリの名前を取得
-                    grandparent_directory_name = os.path.basename(os.path.dirname(os.path.dirname(root)))
+                    grandparent_directory_name = os.path.basename(os.path.dirname(root))
                     
                     # DICOMのPatientNameとPatientIDを祖父ディレクトリの名前に変更
                     dicom_data.PatientName = grandparent_directory_name
